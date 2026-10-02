@@ -42,7 +42,7 @@ General code style:
 Purpose: keep secrets and tokens server-side, cache upstream calls, and give the client one stable API.
 
 - **Open-Meteo proxy:** the BFF fetches marine data and caches it so many viewers do not each hit the upstream API. The client calls e.g. `GET /api/ocean?lat=&lon=` and receives the normalized set of 7 values.
-- **SoundCloud (v1 backend only, no frontend):** user OAuth 2.1 with PKCE (needed because playlists and likes are supported from the start). Build the endpoints now (auth start/callback, token refresh, now-playing / playlist / likes / stream access). **No connect button or any UI in v1**; the UI is designed later together with audio reactivity. Client secret and tokens never reach the browser.
+- **SoundCloud (v1 backend only, no frontend). DEFERRED until a polished non-audio-reactive UI exists (no Artist Pro purchase yet):** user OAuth 2.1 with PKCE (needed because playlists and likes are supported from the start). Build the endpoints now (auth start/callback, token refresh, now-playing / playlist / likes / stream access). **No connect button or any UI in v1**; the UI is designed later together with audio reactivity. Client secret and tokens never reach the browser.
 - **Spotify is dropped.** New apps get 403 on audio-features, audio-analysis and previews since 2024-11-27, and raw audio is not available, so it cannot drive the visuals.
 - **Token storage:** ephemeral, in-memory `Map` on the server keyed by a session-cookie ID. The cookie is a session cookie (gone when the browser closes), httpOnly. No database. A server restart or closing the window means the user reconnects.
 - **No autoplay, ever.** Opening the URL shows only the sea. Audio is strictly opt-in: the experience should be peaceful by default.
@@ -131,4 +131,5 @@ All four elements from the inspo are in scope:
 - SoundCloud: can the stream be analysed in the browser, or must the BFF proxy it? Do we have an Artist Pro account for app registration?
 ## Commands
 
-To be filled in once the project is scaffolded (expected: `npm run dev`, `npm run build`, `npm run preview`).
+- `npm run dev:server`: Hono server on http://localhost:8787 (tsx watch)
+- Client commands (`dev`, `build`, `preview`) to be added when Vite is scaffolded.
