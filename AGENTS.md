@@ -32,7 +32,7 @@ General code style:
 
 - **Client:** Vite + vanilla TypeScript + three.js. No React / R3F / Next.js for now: the UI is one canvas and one label. Revisit only if the v2 audio-selection UI (connect, playlist/likes picker) grows into real app UI.
 - **Server (BFF):** Hono + TypeScript in `server/` in the same repo. Vite dev proxies `/api` to it. The user has not used Hono before, so build it **step by step** (start with a hello-world route) and **explain each Hono concept and the reason for each decision as it is introduced**.
-- Why Hono over FastAPI: one language and shared types across client and server (e.g. the shape of the 8 ocean values), one toolchain, and portability (Node now, serverless or Workers later). FastAPI was a valid alternative, not rejected on performance.
+- Why Hono over FastAPI: one language and shared types across client and server (e.g. the shape of the 7 ocean values), one toolchain, and portability (Node now, serverless or Workers later). FastAPI was a valid alternative, not rejected on performance.
 - Custom shaders (GLSL) where useful; postprocessing (e.g. bloom) is allowed
 - The client talks **only to the BFF**, never directly to Open-Meteo or SoundCloud.
 - Target: **desktop and mobile equally**. Use adaptive quality tiers (particle counts, mesh resolution, pixel ratio, bloom on/off) and handle touch.
@@ -41,7 +41,7 @@ General code style:
 
 Purpose: keep secrets and tokens server-side, cache upstream calls, and give the client one stable API.
 
-- **Open-Meteo proxy:** the BFF fetches marine data and caches it so many viewers do not each hit the upstream API. The client calls e.g. `GET /api/ocean?lat=&lon=` and receives the normalized set of 8 values.
+- **Open-Meteo proxy:** the BFF fetches marine data and caches it so many viewers do not each hit the upstream API. The client calls e.g. `GET /api/ocean?lat=&lon=` and receives the normalized set of 7 values.
 - **SoundCloud (v1 backend only, no frontend):** user OAuth 2.1 with PKCE (needed because playlists and likes are supported from the start). Build the endpoints now (auth start/callback, token refresh, now-playing / playlist / likes / stream access). **No connect button or any UI in v1**; the UI is designed later together with audio reactivity. Client secret and tokens never reach the browser.
 - **Spotify is dropped.** New apps get 403 on audio-features, audio-analysis and previews since 2024-11-27, and raw audio is not available, so it cannot drive the visuals.
 - **Token storage:** ephemeral, in-memory `Map` on the server keyed by a session-cookie ID. The cookie is a session cookie (gone when the browser closes), httpOnly. No database. A server restart or closing the window means the user reconnects.
@@ -52,14 +52,13 @@ Purpose: keep secrets and tokens server-side, cache upstream calls, and give the
 
 Open-Meteo Marine API: https://open-meteo.com/en/docs/marine-weather-api
 
-The original snippet used the Python SDK (`current.Variables(0).Value()`). The BFF calls the REST/JSON endpoint with `current=` and the same 8 variables (the browser never calls Open-Meteo itself):
+The original snippet used the Python SDK (`current.Variables(0).Value()`). The BFF calls the REST/JSON endpoint with `current=` and the same 7 variables (`wave_peak_period` was dropped: Open-Meteo returns null for it in `current`) (the browser never calls Open-Meteo itself):
 
 | Variable (API name)       | Meaning                           |
 | ------------------------- | --------------------------------- |
 | `wave_height`             | Wave height                       |
 | `wave_direction`          | Wave direction                    |
 | `wave_period`             | Wave period                       |
-| `wave_peak_period`        | Peak wave period                  |
 | `sea_level_height_msl`    | Sea level height (mean sea level) |
 | `sea_surface_temperature` | Sea surface temperature           |
 | `ocean_current_velocity`  | Ocean current velocity            |
@@ -88,7 +87,6 @@ Verify exact parameter names against the docs when writing the fetch.
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | `wave_height`             | Wireframe mesh swell amplitude                                                                                      |
 | `wave_period`             | Mesh wave speed and wavelength                                                                                      |
-| `wave_peak_period`        | A second, slower swell layer on top of the mesh                                                                     |
 | `wave_direction`          | Direction the mesh swells travel                                                                                    |
 | `sea_level_height_msl`    | Bubble and sphere altitude and bobbing, plus the horizon / water-plane level                                        |
 | `sea_surface_temperature` | Colour palette: cold gives teal, blue and violet; warm gives amber, coral and green. Always iridescent and luminous |
