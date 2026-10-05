@@ -44,6 +44,7 @@ Purpose: keep secrets and tokens server-side, cache upstream calls, and give the
 - **Open-Meteo proxy:** the BFF fetches marine data, applies the mapping and caches it so many viewers do not each hit the upstream API. The client calls e.g. `GET /api/ocean?lat=&lon=` and receives `{ location, time, params }`: ready-to-use visual params (0..1 scalars, directions as unit vectors), never raw ocean values.
 - **SoundCloud (v1 backend only, no frontend). DEFERRED until a polished non-audio-reactive UI exists (no Artist Pro purchase yet):** user OAuth 2.1 with PKCE (needed because playlists and likes are supported from the start). Build the endpoints now (auth start/callback, token refresh, now-playing / playlist / likes / stream access). **No connect button or any UI in v1**; the UI is designed later together with audio reactivity. Client secret and tokens never reach the browser.
 - **Spotify is dropped.** New apps get 403 on audio-features, audio-analysis and previews since 2024-11-27, and raw audio is not available, so it cannot drive the visuals.
+- **Cache:** `server/ocean/cache.ts` (ADR-0006): in-memory `Map` per 0.1° grid cell, 15 min TTL, last-good-value merge on raw data, stale-on-failure, in-flight dedupe, 500-cell cap. Tunables live in `CACHE` in `server/constants.ts`. `server/middleware/cacheControl.ts` adds `Cache-Control: max-age` (5 min) to 200 responses.
 - **Token storage:** ephemeral, in-memory `Map` on the server keyed by a session-cookie ID. The cookie is a session cookie (gone when the browser closes), httpOnly. No database. A server restart or closing the window means the user reconnects.
 - **No autoplay, ever.** Opening the URL shows only the sea. Audio is strictly opt-in: the experience should be peaceful by default.
 - Facts to verify against SoundCloud docs before building: stream endpoint is `GET /tracks/{id}/stream` with an OAuth token; tokens last about 1 hour and refresh tokens are single-use (concurrent refreshes need care); app registration requires an Artist Pro account; check CORS and whether Web Audio can analyse the stream (it may need to be proxied through the BFF).
@@ -132,4 +133,5 @@ All four elements from the inspo are in scope:
 ## Commands
 
 - `npm run dev:server`: Hono server on http://localhost:8787 (tsx watch)
+- `npm test`: vitest (`test/`); `npm run test:watch` to watch
 - Client commands (`dev`, `build`, `preview`) to be added when Vite is scaffolded.

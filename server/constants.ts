@@ -27,6 +27,7 @@ export const CACHE = {
   gridDecimals: 1, // decimals of gridStepDeg, used for the key and upstream coords
   ttlMs: 15 * 60 * 1000, // Open-Meteo updates about every 15 minutes
   maxEntries: 500, // caps memory; the oldest cell is evicted first
+  browserMaxAgeSec: 5 * 60, // Cache-Control max-age for browsers/CDNs; below ttlMs so data stays fresh
 } as const;
 
 // How each raw variable is scaled to 0..1 (scalars) or turned into a unit

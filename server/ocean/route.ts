@@ -1,10 +1,15 @@
 import { Hono } from "hono";
+import { CACHE } from "../constants.js";
+import { cacheControl } from "../middleware/cacheControl.js";
 import { parseCoords } from "./coords.js";
 import { getMarineCurrent } from "./cache.js";
 import { toOceanResponse } from "./normalize.js";
 
 // A small Hono app of its own, mounted into the main app with app.route().
 export const ocean = new Hono();
+
+// Runs for every request to this sub-app, wrapping the handler below.
+ocean.use("*", cacheControl(CACHE.browserMaxAgeSec));
 
 ocean.get("/", async (c) => {
   // c.req.query('name') reads ?name=... from the URL (string or undefined).
