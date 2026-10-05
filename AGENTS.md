@@ -33,7 +33,7 @@ General code style:
 - **Client:** Vite + vanilla TypeScript + three.js (WebGL2), **shader-first** (ADR-0008): motion is computed on the GPU in small custom shaders; the CPU only eases params and updates uniforms. No React / R3F / Next.js for now: the UI is one canvas, one label and later a mic opt-in control. Revisit only if the UI grows into real app UI.
 - **Server (BFF):** Hono + TypeScript in `server/` in the same repo. Vite dev proxies `/api` to it. The user has not used Hono before, so build it **step by step** (start with a hello-world route) and **explain each Hono concept and the reason for each decision as it is introduced**.
 - Why Hono over FastAPI: one language and shared types across client and server (e.g. the shape of the 7 ocean values), one toolchain, and portability (Node now, serverless or Workers later). FastAPI was a valid alternative, not rejected on performance.
-- Custom shaders (GLSL) are the default way to animate each layer; bloom via a lightweight post-processing pass, off on low tiers. Integrate speeds into a phase on the CPU (never send speed * time) so data changes never jump the scene. GLSL is new to the user: build one layer at a time and explain each shader as it is introduced.
+- Custom shaders (GLSL) are the default way to animate each layer; bloom via a lightweight post-processing pass, off on low tiers. Integrate speeds into a phase on the CPU (never send speed \* time) so data changes never jump the scene. GLSL is new to the user: build one layer at a time and explain each shader as it is introduced.
 - The client talks **only to the BFF**, never directly to Open-Meteo.
 - Target: **desktop and mobile equally**. Use adaptive quality tiers (particle counts, mesh resolution, pixel ratio, bloom on/off) and handle touch.
 
@@ -108,6 +108,16 @@ All four elements from the inspo are in scope:
 - **Pan through the scene** with the mouse (touch drag on mobile). This is a camera pan/parallax through the scene, not a free orbit/zoom.
 - No charts, numbers, units or dashboards.
 
+Current status:
+Small basic demo of API response processed into mesh added
+What's still missing is everything else:
+
+- Wave mesh: a proper version with barycentric glowing lines, layered swells and the glow along the ridges.
+- Ribbons: the iridescent flow ribbons.
+- Orbs: the glass orbs and wire spheres.
+- Particles: the sparkle particles.
+- Bloom and tiers: bloom, quality tiers and camera pan.
+
 ## v2 (planned, not now)
 
 - **Microphone audio input, entirely in the browser** (ADR-0007). The viewer opts in; the browser listens to whatever is playing in the room (`getUserMedia` -> Web Audio `AnalyserNode`). No server involvement, nothing is uploaded or stored. Make the visualization audio-reactive: e.g. spectrum bands, amplitude driving object scales, beat detection driving pulses.
@@ -121,6 +131,7 @@ All four elements from the inspo are in scope:
 - How user location input will eventually work (search box, globe click, geolocation).
 - Colour palette details and fonts for the label.
 - Hosting for the Hono server (not yet decided; stack is Node-portable).
+
 ## Commands
 
 - `npm run dev:server`: Hono server on http://localhost:8787 (tsx watch)
