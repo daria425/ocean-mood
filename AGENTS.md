@@ -41,7 +41,7 @@ General code style:
 
 Purpose: keep secrets and tokens server-side, cache upstream calls, and give the client one stable API.
 
-- **Open-Meteo proxy:** the BFF fetches marine data and caches it so many viewers do not each hit the upstream API. The client calls e.g. `GET /api/ocean?lat=&lon=` and receives the normalized set of 7 values.
+- **Open-Meteo proxy:** the BFF fetches marine data, applies the mapping and caches it so many viewers do not each hit the upstream API. The client calls e.g. `GET /api/ocean?lat=&lon=` and receives `{ location, time, params }`: ready-to-use visual params (0..1 scalars, directions as unit vectors), never raw ocean values.
 - **SoundCloud (v1 backend only, no frontend). DEFERRED until a polished non-audio-reactive UI exists (no Artist Pro purchase yet):** user OAuth 2.1 with PKCE (needed because playlists and likes are supported from the start). Build the endpoints now (auth start/callback, token refresh, now-playing / playlist / likes / stream access). **No connect button or any UI in v1**; the UI is designed later together with audio reactivity. Client secret and tokens never reach the browser.
 - **Spotify is dropped.** New apps get 403 on audio-features, audio-analysis and previews since 2024-11-27, and raw audio is not available, so it cannot drive the visuals.
 - **Token storage:** ephemeral, in-memory `Map` on the server keyed by a session-cookie ID. The cookie is a session cookie (gone when the browser closes), httpOnly. No database. A server restart or closing the window means the user reconnects.
@@ -71,13 +71,13 @@ Verify exact parameter names against the docs when writing the fetch.
 - **Live "now" only.** No forecast or history in v1. Fetch current values, refresh periodically (~15 min; check the model's actual update cadence), and **ease smoothly** from old to new values. The scene must never jump.
 - Keep the data layer shaped so hourly forecast scrubbing could be added later without a refactor, but do not build it now.
 - **Location is a variable, not a constant.** v1 hardcodes one coordinate, but the renderer must only consume a `{lat, lon}` provided through an interface, and never know where it came from. User-chosen location input comes later (design TBD).
-- **Failure behaviour:** on null values or fetch failure, **hold the last good values**. On a cold start with no data, use a calm "resting sea" default preset. Never show an error screen. Marine data is often null near coasts, so handle nulls per variable.
+- **Failure behaviour:** on null values or fetch failure, **hold the last good values**. On a cold start with no data, use a calm "resting sea" default preset. Never show an error screen. Marine data is often null near coasts, so handle nulls per variable. The server substitutes nulls (resting sea now; last good value per grid cell once the cache exists), so the client never sees a null.
 
 ## Architecture principles
 
-- Layers: BFF (`server/`: upstream fetch, cache, auth) -> client `data` (call BFF, normalize, ease) -> `mapping` (values -> visual params) -> `scene` (three.js).
-- **Mapping is one declarative, swappable file.** The user will tune and experiment with it, so rewiring a variable to a different visual property must be a small edit. No mapping logic scattered through scene code.
-- Normalize raw values to 0..1 (with sensible ranges and clamping) before they reach the scene.
+- Layers: BFF (`server/`: upstream fetch, **mapping and normalization**, cache, auth) -> client `data` (call BFF, ease between polls) -> `scene` (three.js). The client is deliberately dumb: it draws `params`. Only colour palettes are defined client-side, picked from the `color_palette` value (0 cold .. 1 warm).
+- **Mapping is one declarative, swappable file: `server/mapping.ts`** (variable -> param names), with scaling ranges in `server/constants.ts` (`VARIABLE_SPECS`). Rewiring a variable to a different visual property must be a small edit. No mapping logic scattered through scene code. See ADR-0005.
+- Raw values are normalized to 0..1 (clamped) on the server; compass directions become unit vectors so easing never wraps at 360.
 - Scene modules are independent layers (waves, ribbons, orbs, particles) that each consume the shared parameter object.
 - The scene exposes a single parameter object (including a slot for audio, see v2) so new input sources plug in without scene rewrites.
 

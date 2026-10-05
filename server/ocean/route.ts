@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { parseCoords } from "./coords.js";
+import { toOceanResponse } from "./normalize.js";
 import { fetchMarineCurrent } from "./openMeteo.js";
 
 // A small Hono app of its own, mounted into the main app with app.route().
@@ -17,7 +18,7 @@ ocean.get("/", async (c) => {
 
   try {
     const oceanData = await fetchMarineCurrent(coords);
-    return c.json(oceanData);
+    return c.json(toOceanResponse(oceanData));
   } catch (err) {
     console.error("ocean fetch failed:", err);
     return c.json({ error: "Ocean API unavailable" }, 502);
