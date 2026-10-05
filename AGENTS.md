@@ -30,24 +30,20 @@ General code style:
 
 ## Stack
 
-- **Client:** Vite + vanilla TypeScript + three.js. No React / R3F / Next.js for now: the UI is one canvas and one label. Revisit only if the v2 audio-selection UI (connect, playlist/likes picker) grows into real app UI.
+- **Client:** Vite + vanilla TypeScript + three.js (WebGL2), **shader-first** (ADR-0008): motion is computed on the GPU in small custom shaders; the CPU only eases params and updates uniforms. No React / R3F / Next.js for now: the UI is one canvas, one label and later a mic opt-in control. Revisit only if the UI grows into real app UI.
 - **Server (BFF):** Hono + TypeScript in `server/` in the same repo. Vite dev proxies `/api` to it. The user has not used Hono before, so build it **step by step** (start with a hello-world route) and **explain each Hono concept and the reason for each decision as it is introduced**.
 - Why Hono over FastAPI: one language and shared types across client and server (e.g. the shape of the 7 ocean values), one toolchain, and portability (Node now, serverless or Workers later). FastAPI was a valid alternative, not rejected on performance.
-- Custom shaders (GLSL) where useful; postprocessing (e.g. bloom) is allowed
-- The client talks **only to the BFF**, never directly to Open-Meteo or SoundCloud.
+- Custom shaders (GLSL) are the default way to animate each layer; bloom via a lightweight post-processing pass, off on low tiers. Integrate speeds into a phase on the CPU (never send speed * time) so data changes never jump the scene. GLSL is new to the user: build one layer at a time and explain each shader as it is introduced.
+- The client talks **only to the BFF**, never directly to Open-Meteo.
 - Target: **desktop and mobile equally**. Use adaptive quality tiers (particle counts, mesh resolution, pixel ratio, bloom on/off) and handle touch.
 
 ## Backend (BFF)
 
-Purpose: keep secrets and tokens server-side, cache upstream calls, and give the client one stable API.
+Purpose: cache upstream calls, own the mapping, and give the client one stable API.
 
 - **Open-Meteo proxy:** the BFF fetches marine data, applies the mapping and caches it so many viewers do not each hit the upstream API. The client calls e.g. `GET /api/ocean?lat=&lon=` and receives `{ location, time, params }`: ready-to-use visual params (0..1 scalars, directions as unit vectors), never raw ocean values.
-- **SoundCloud (v1 backend only, no frontend). DEFERRED until a polished non-audio-reactive UI exists (no Artist Pro purchase yet):** user OAuth 2.1 with PKCE (needed because playlists and likes are supported from the start). Build the endpoints now (auth start/callback, token refresh, now-playing / playlist / likes / stream access). **No connect button or any UI in v1**; the UI is designed later together with audio reactivity. Client secret and tokens never reach the browser.
-- **Spotify is dropped.** New apps get 403 on audio-features, audio-analysis and previews since 2024-11-27, and raw audio is not available, so it cannot drive the visuals.
+- **No autoplay, ever.** Opening the URL shows only the sea. Audio is strictly opt-in (the mic is never requested until the viewer asks): the experience should be peaceful by default.
 - **Cache:** `server/ocean/cache.ts` (ADR-0006): in-memory `Map` per 0.1° grid cell, 15 min TTL, last-good-value merge on raw data, stale-on-failure, in-flight dedupe, 500-cell cap. Tunables live in `CACHE` in `server/constants.ts`. `server/middleware/cacheControl.ts` adds `Cache-Control: max-age` (5 min) to 200 responses.
-- **Token storage:** ephemeral, in-memory `Map` on the server keyed by a session-cookie ID. The cookie is a session cookie (gone when the browser closes), httpOnly. No database. A server restart or closing the window means the user reconnects.
-- **No autoplay, ever.** Opening the URL shows only the sea. Audio is strictly opt-in: the experience should be peaceful by default.
-- Facts to verify against SoundCloud docs before building: stream endpoint is `GET /tracks/{id}/stream` with an OAuth token; tokens last about 1 hour and refresh tokens are single-use (concurrent refreshes need care); app registration requires an Artist Pro account; check CORS and whether Web Audio can analyse the stream (it may need to be proxied through the BFF).
 
 ## Data source
 
@@ -114,13 +110,9 @@ All four elements from the inspo are in scope:
 
 ## v2 (planned, not now)
 
-- A small **audio file drop input** accepting audio files, plus the **SoundCloud track selection UI** (connect, pick from playlists/likes or add a track) built on the v1 backend endpoints. Make the visualization audio-reactive via Web Audio `AnalyserNode`: e.g. waveform or spectrum rendering, object scales mapped to amplitude, beat detection driving pulses.
-- v1 builds only the SoundCloud backend, not the UI or the reactivity, but leaves room: the scene parameter object should be able to accept an extra audio-derived channel later.
-
-## v3 (idea, much later)
-
-- Play a track in SoundCloud itself (another tab or app) and have the visualization react to it, instead of setting everything up inside the browser. The in-browser track selection UI from v2 is the in-between state.
-- Feasibility is unverified. Capturing another tab's audio (e.g. `getDisplayMedia` tab audio) is Chromium-desktop only and conflicts with the mobile-equal goal, so this needs its own investigation.
+- **Microphone audio input, entirely in the browser** (ADR-0007). The viewer opts in; the browser listens to whatever is playing in the room (`getUserMedia` -> Web Audio `AnalyserNode`). No server involvement, nothing is uploaded or stored. Make the visualization audio-reactive: e.g. spectrum bands, amplitude driving object scales, beat detection driving pulses.
+- Request the mic with `echoCancellation`, `noiseSuppression` and `autoGainControl` set to false (they degrade music analysis). Needs a secure context (HTTPS or localhost) and a user gesture to start the `AudioContext` (iOS). Never connect the analyser to the speakers (feedback).
+- v1 does not build this, but leaves room: the scene parameter object should be able to accept an extra audio-derived channel (a few smoothed bands and a level) later.
 
 ## Open questions
 
@@ -129,7 +121,6 @@ All four elements from the inspo are in scope:
 - How user location input will eventually work (search box, globe click, geolocation).
 - Colour palette details and fonts for the label.
 - Hosting for the Hono server (not yet decided; stack is Node-portable).
-- SoundCloud: can the stream be analysed in the browser, or must the BFF proxy it? Do we have an Artist Pro account for app registration?
 ## Commands
 
 - `npm run dev:server`: Hono server on http://localhost:8787 (tsx watch)

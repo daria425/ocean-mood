@@ -8,6 +8,8 @@
 
 The app began as a static site because Open-Meteo allows CORS. SoundCloud integration needs OAuth with a client secret and per-user tokens, which cannot live in the browser. A server also lets us cache Open-Meteo responses so many viewers do not each hit the upstream API.
 
+> **Update 2026-10-05 (ADR-0007):** SoundCloud was dropped, so OAuth is no longer a reason for the BFF. The decision still stands on caching (ADR-0006) and server-side mapping (ADR-0005).
+
 ## Decision
 
 We use a Hono and TypeScript backend-for-frontend in `server/` in the same repo. The client talks only to the BFF, never directly to Open-Meteo or SoundCloud. The client stays vanilla TypeScript and three.js.

@@ -1,7 +1,7 @@
 # ADR-0002: SoundCloud only, drop Spotify
 
 **Date**: 2026-10-02
-**Status**: accepted
+**Status**: superseded by ADR-0007
 **Deciders**: Daria, Claude
 
 ## Context

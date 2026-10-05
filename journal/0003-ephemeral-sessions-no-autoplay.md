@@ -1,7 +1,7 @@
 # ADR-0003: Ephemeral in-memory sessions, no autoplay
 
 **Date**: 2026-10-02
-**Status**: accepted
+**Status**: superseded by ADR-0007 (sessions no longer needed; the no-autoplay rule carries over)
 **Deciders**: Daria, Claude
 
 ## Context
