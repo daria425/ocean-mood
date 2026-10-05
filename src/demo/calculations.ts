@@ -1,4 +1,5 @@
 import { WAVE, type RESTING } from './constants';
+import { WATER } from './waterSettings';
 
 export type DemoParams = typeof RESTING;
 
@@ -14,4 +15,13 @@ export function getWaveSettings(params: DemoParams) {
 // Accumulating phase keeps motion continuous instead of using speed * time.
 export function advancePhase(phase: number, deltaSeconds: number, speed: number) {
   return phase + deltaSeconds * speed;
+}
+
+export function getWaterSettings(params: DemoParams) {
+  const wave = getWaveSettings(params);
+  return {
+    amplitude: wave.amplitude * WATER.swellHeight,
+    frequency: wave.frequency / Math.max(WATER.swellLength, 0.01),
+    speed: wave.speed * WATER.motionSpeed,
+  };
 }

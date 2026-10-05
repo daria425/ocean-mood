@@ -94,6 +94,8 @@ The mapping is **loosely literal**: each value drives one intuitive visual prope
 
 ## v1 scene elements
 
+Background composition (ADR-0009): a continuous 3D water surface with floating wireframe mesh sheets above it. Water and sheets share the existing mesh wave inputs; exact water appearance and implementation must be agreed before building.
+
 All four elements from the inspo are in scope:
 
 1. Translucent wireframe wave mesh
@@ -110,6 +112,7 @@ All four elements from the inspo are in scope:
 
 Current status:
 Small basic demo of API response processed into mesh added
+The demo now previews a glassy 3D water material using the same wave settings. Appearance controls and suggested ranges live in `src/demo/waterSettings.ts`; water GLSL lives in `src/demo/waterShaders.ts`. Reflections are procedural light bands, not reflections of scene objects; transmission/refraction and floating sheets are not built yet. The original wireframe shaders remain in `src/demo/shaders.ts`.
 What's still missing is everything else:
 
 3D Scene:
