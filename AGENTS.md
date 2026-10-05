@@ -112,11 +112,18 @@ Current status:
 Small basic demo of API response processed into mesh added
 What's still missing is everything else:
 
+3D Scene:
+
 - Wave mesh: a proper version with barycentric glowing lines, layered swells and the glow along the ridges.
 - Ribbons: the iridescent flow ribbons.
 - Orbs: the glass orbs and wire spheres.
 - Particles: the sparkle particles.
 - Bloom and tiers: bloom, quality tiers and camera pan.
+
+Overall Experience (v2):
+
+- Ability to select location on a nice map
+- Audio reactivity from device microphone
 
 ## v2 (planned, not now)
 
