@@ -21,6 +21,14 @@ export const OPEN_METEO = {
   ],
 } as const;
 
+export const CACHE = {
+  // Requests are snapped to this grid so nearby viewers share one entry.
+  gridStepDeg: 0.1,
+  gridDecimals: 1, // decimals of gridStepDeg, used for the key and upstream coords
+  ttlMs: 15 * 60 * 1000, // Open-Meteo updates about every 15 minutes
+  maxEntries: 500, // caps memory; the oldest cell is evicted first
+} as const;
+
 // How each raw variable is scaled to 0..1 (scalars) or turned into a unit
 // vector (compass directions). min/max are clamped; `invert` flips the result.
 export const VARIABLE_SPECS = {
