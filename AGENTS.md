@@ -112,7 +112,7 @@ All four elements from the inspo are in scope:
 
 Current status:
 Small basic demo of API response processed into mesh added
-The demo now previews a glassy 3D water material using the same wave settings. Appearance controls and suggested ranges live in `src/demo/waterSettings.ts`; water GLSL lives in `src/demo/waterShaders.ts`. Reflections are procedural light bands, not reflections of scene objects; transmission/refraction and floating sheets are not built yet. The original wireframe shaders remain in `src/demo/shaders.ts`.
+The demo now previews glassy 3D water with one floating wireframe sheet, sharing wave calculations and animation phase. Appearance controls and suggested ranges live in `src/demo/waterSettings.ts` (`WATER` and `SHEET`); all GLSL lives in `src/demo/shaders.ts`. Reflections are procedural light bands, not reflections of scene objects; transmission/refraction is not built yet. The sheet uses basic wireframe rendering; refined glowing lines remain future work.
 What's still missing is everything else:
 
 3D Scene:

@@ -41,3 +41,20 @@ export const WATER = {
   size: 100,
   segments: 240,
 };
+
+// FLOATING SHEET — same scene, separate transparent wire material.
+export const SHEET = {
+  visible: true, // false lets you compare with water alone.
+  width: 16, // Try 5–16.
+  depth: 5, // Try 3–10.
+  altitude: 4, // Try 1–4; too low may intersect the water.
+  offsetX: 0, // Move left/right.
+  offsetY: 0, // Higher = farther from the camera.
+  waveHeight: 1, // Relative to water swells; try 0.3–1.5.
+  brightness: 0.65, // Try 0.2–1.5.
+  opacity: 0.55, // Try 0–1.
+  coldColor: "#1ae6ff",
+  warmColor: "#ff8c66",
+  segmentsX: 48,
+  segmentsY: 24,
+};

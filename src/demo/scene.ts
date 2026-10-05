@@ -6,8 +6,41 @@ import {
   getWaterSettings,
   type DemoParams,
 } from "./calculations";
-import { waterVertexShader, waterFragmentShader } from "./shaders";
-import { WATER } from "./waterSettings";
+import { waterVertexShader, waterFragmentShader, sheetVertexShader, sheetFragmentShader } from "./shaders";
+import { WATER, SHEET } from "./waterSettings";
+
+function createFloatingSheet(waterMaterial: THREE.ShaderMaterial) {
+  const material = new THREE.ShaderMaterial({
+    vertexShader: sheetVertexShader,
+    fragmentShader: sheetFragmentShader,
+    wireframe: true,
+    transparent: true,
+    depthWrite: false,
+    depthTest: true,
+    side: THREE.DoubleSide,
+    blending: THREE.AdditiveBlending,
+    uniforms: {
+      // Sharing these uniform objects keeps both surfaces in the same rhythm.
+      uPhase: waterMaterial.uniforms.uPhase,
+      uFrequency: waterMaterial.uniforms.uFrequency,
+      uDirection: waterMaterial.uniforms.uDirection,
+      uCrossSwell: waterMaterial.uniforms.uCrossSwell,
+      uWarmth: waterMaterial.uniforms.uWarmth,
+      uAmplitude: { value: waterMaterial.uniforms.uAmplitude.value * SHEET.waveHeight },
+      uColdColor: { value: new THREE.Color(SHEET.coldColor) },
+      uWarmColor: { value: new THREE.Color(SHEET.warmColor) },
+      uBrightness: { value: SHEET.brightness },
+      uOpacity: { value: SHEET.opacity },
+    },
+  });
+  const sheet = new THREE.Mesh(
+    new THREE.PlaneGeometry(SHEET.width, SHEET.depth, SHEET.segmentsX, SHEET.segmentsY),
+    material,
+  );
+  sheet.position.set(SHEET.offsetX, SHEET.offsetY, SHEET.altitude);
+  sheet.visible = SHEET.visible;
+  return sheet;
+}
 
 export function createScene(parent: HTMLElement, params: DemoParams) {
   const wave = getWaterSettings(params);
@@ -63,6 +96,8 @@ export function createScene(parent: HTMLElement, params: DemoParams) {
       material,
     ),
   );
+
+  scene.add(createFloatingSheet(material));
 
   const resize = () => {
     renderer.setSize(window.innerWidth, window.innerHeight);

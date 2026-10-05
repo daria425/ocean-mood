@@ -60,6 +60,36 @@ const waveFunctions = /* glsl */ `
   }
 `;
 
+// Same wave function and phase as the water; its separate mesh sits above it.
+export const sheetVertexShader = /* glsl */ `
+  ${waveFunctions}
+  varying vec2 vUv;
+  void main() {
+    vUv = uv;
+    vec3 world = (modelMatrix * vec4(position, 1.0)).xyz;
+    world.z += surface(world.xy).x;
+    gl_Position = projectionMatrix * viewMatrix * vec4(world, 1.0);
+  }
+`;
+
+export const sheetFragmentShader = /* glsl */ `
+  uniform float uWarmth;
+  uniform vec3 uColdColor;
+  uniform vec3 uWarmColor;
+  uniform float uBrightness;
+  uniform float uOpacity;
+  varying vec2 vUv;
+  void main() {
+    // Fade the perimeter so the sheet has no hard rectangular border.
+    vec2 edge = smoothstep(vec2(0.0), vec2(0.15), vUv)
+      * smoothstep(vec2(0.0), vec2(0.15), 1.0 - vUv);
+    vec3 color = mix(uColdColor, uWarmColor, uWarmth) * uBrightness;
+    gl_FragColor = vec4(color, uOpacity * edge.x * edge.y);
+    #include <tonemapping_fragment>
+    #include <colorspace_fragment>
+  }
+`;
+
 // Vertex shader: bend the actual plane into broad, smooth swells.
 export const waterVertexShader = /* glsl */ `
   ${waveFunctions}
