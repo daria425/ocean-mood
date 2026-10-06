@@ -182,3 +182,69 @@ export const waterFragmentShader = /* glsl */ `
     #include <colorspace_fragment>
   }
 `;
+
+// A fixed strip becomes a flowing 3D curve on the GPU. uLength stretches its
+// reach, uDirection sets current heading, and uPhase carries continuous motion.
+export const ribbonVertexShader = /* glsl */ `
+  uniform float uPhase;
+  uniform float uLength;
+  uniform vec2 uDirection;
+  uniform float uWidth;
+  uniform float uLift;
+  uniform float uBends;
+  uniform float uSlope;
+  uniform float uDepthSway;
+  uniform float uTwist;
+  varying vec2 vUv;
+  varying float vRoll;
+  void main() {
+    vUv = uv;
+    float t = uv.x;
+    float along = (t - 0.5) * uLength;
+    float angle = t * 6.283185 * uBends - uPhase;
+    vec2 heading = uDirection / max(length(uDirection), 0.0001);
+    vec2 across = vec2(-heading.y, heading.x);
+    vec3 center = vec3(heading * along + across * sin(angle * 0.7) * uDepthSway,
+      sin(angle) * uLift + sin(angle * 1.7 + 0.8) * uLift * 0.18 + along * uSlope);
+    // Roll the cross-section gently; taper ends so the ribbon dissolves.
+    float roll = sin(angle * 0.6 + 1.0) * uTwist;
+    vRoll = roll;
+    vec3 side = vec3(across * sin(roll), cos(roll));
+    float taper = pow(max(sin(t * 3.141593), 0.0), 0.6);
+    vec3 p = center + side * (uv.y - 0.5) * uWidth * taper;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
+  }
+`;
+
+// Local glow needs no postprocessing: a bright core fades into a broad halo.
+// Palette follows ocean warmth; the moving hue/highlights follow ribbon phase.
+export const ribbonFragmentShader = /* glsl */ `
+  uniform float uPhase;
+  uniform float uWarmth;
+  uniform float uBrightness;
+  uniform float uOpacity;
+  uniform float uCoreWidth;
+  uniform float uGlowStrength;
+  uniform float uColorCycles;
+  uniform float uColdHue;
+  uniform float uWarmHue;
+  uniform float uHueOffset;
+  uniform float uShimmer;
+  varying vec2 vUv;
+  varying float vRoll;
+  void main() {
+    float across = abs(vUv.y * 2.0 - 1.0);
+    float core = exp(-pow(across / max(uCoreWidth, 0.001), 2.0));
+    float halo = exp(-across * across * 4.0) * (1.0 - smoothstep(0.7, 1.0, across));
+    float ends = smoothstep(0.0, 0.12, vUv.x) * smoothstep(0.0, 0.12, 1.0 - vUv.x);
+    float hue = vUv.x * uColorCycles - uPhase * 0.08
+      + mix(uColdHue, uWarmHue, uWarmth) + uHueOffset + vRoll * 0.08;
+    vec3 rainbow = 0.5 + 0.5 * cos(6.283185 * (hue + vec3(0.0, 0.33, 0.67)));
+    vec3 color = mix(rainbow, vec3(1.0), core * 0.35);
+    float shimmer = 1.0 - uShimmer * (0.5 + 0.5 * sin(vUv.x * 25.0 - uPhase * 1.8));
+    gl_FragColor = vec4(color * uBrightness * shimmer,
+      (core + halo * uGlowStrength) * ends * uOpacity);
+    #include <tonemapping_fragment>
+    #include <colorspace_fragment>
+  }
+`;

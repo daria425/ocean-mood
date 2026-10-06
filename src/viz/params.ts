@@ -6,6 +6,10 @@ export type SceneParams = {
   speed: number; // 0..1: wave travel speed; integrated into a continuous phase.
   dirX: number; // Unit direction's x component: travel along the horizontal plane.
   dirY: number; // Unit direction's y component; update both components together.
+  ribbonSpeed: number; // 0..1: current-driven ribbon motion, integrated separately.
+  ribbonLength: number; // 0..1: extra ribbon reach; geometry stays allocated.
+  ribbonDirX: number; // Current heading in the ocean plane; update x/y together.
+  ribbonDirY: number;
   palette: number; // 0..1: blend the existing cold and warm colours.
 };
 

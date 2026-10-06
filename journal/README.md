@@ -14,3 +14,5 @@
 | [0010](0010-raw-current-weather-fetch.md) | Raw current-weather fetch; defer visual integration | accepted | 2026-10-06 |
 
 ADR-0009 updated 2026-10-06: approved bottom-sixth water framing and three overlapping sheets with lower shared opacity, preserving current palettes.
+
+Session handoff: [2026-10-06 — mesh and ribbon playground](handoff-2026-10-06.md).

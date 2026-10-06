@@ -12,7 +12,10 @@ import {
   waterFragmentShader,
   sheetVertexShader,
   sheetFragmentShader,
+  ribbonVertexShader,
+  ribbonFragmentShader,
 } from "./shaders";
+import { RIBBON } from "./ribbonSettings";
 import { WATER, SHEET, FRAMING } from "./waterSettings";
 
 // Each triangle needs its own three corners for barycentric edge distances.
@@ -122,6 +125,37 @@ function createWaterLayer(params: SceneParams) {
   );
 }
 
+// A layer supplies placement/variation; live params supply current and warmth.
+// The strip is allocated once; the shader bends it every frame using uniforms.
+function createRibbon(params: SceneParams, layer: (typeof RIBBON.layers)[number]) {
+  const material = new THREE.ShaderMaterial({
+    vertexShader: ribbonVertexShader, fragmentShader: ribbonFragmentShader,
+    transparent: true, depthWrite: false, side: THREE.DoubleSide,
+    blending: THREE.AdditiveBlending,
+    uniforms: {
+      uPhase: { value: layer.phase },
+      uLength: { value: RIBBON.length + params.ribbonLength * RIBBON.lengthRange },
+      uDirection: { value: new THREE.Vector2(params.ribbonDirX, params.ribbonDirY) },
+      uWarmth: { value: params.palette },
+      uWidth: { value: RIBBON.width }, uLift: { value: RIBBON.lift },
+      uBends: { value: RIBBON.bends }, uSlope: { value: RIBBON.slope },
+      uDepthSway: { value: RIBBON.depthSway }, uTwist: { value: RIBBON.twist },
+      uBrightness: { value: RIBBON.brightness }, uOpacity: { value: RIBBON.opacity },
+      uCoreWidth: { value: RIBBON.coreWidth }, uGlowStrength: { value: RIBBON.glowStrength },
+      uColorCycles: { value: RIBBON.colorCycles },
+      uColdHue: { value: RIBBON.coldHue }, uWarmHue: { value: RIBBON.warmHue },
+      uHueOffset: { value: layer.hue }, uShimmer: { value: RIBBON.shimmer },
+    },
+  });
+  const ribbon = new THREE.Mesh(new THREE.PlaneGeometry(1, 1, RIBBON.segments, 1), material);
+  ribbon.position.set(layer.x, layer.y, layer.z);
+  ribbon.scale.setScalar(layer.scale);
+  ribbon.visible = RIBBON.visible;
+  // CPU bounds describe the tiny source plane, not the shader-deformed strip.
+  ribbon.frustumCulled = false;
+  return ribbon;
+}
+
 // Defaults are resolved once here; every geometry builder gets complete inputs.
 export function createScene(
   parent: HTMLElement,
@@ -129,6 +163,7 @@ export function createScene(
 ): SceneController {
   const params: SceneParams = { ...RESTING, ...initialParams };
   let wave = getWaterSettings(params);
+  let ribbonSpeed = params.ribbonSpeed;
 
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(
@@ -156,11 +191,20 @@ export function createScene(
     createFloatingSheet(params, water.material, layer),
   );
   scene.add(...sheets);
+  const ribbons = RIBBON.layers.map((layer) => createRibbon(params, layer));
+  scene.add(...ribbons);
 
   // Shared uniforms carry spacing, direction and colour to all sheets.
   // Sheet amplitude is separate so its artistic height multiplier is retained.
   const updateParams = (next: SceneParams) => {
     wave = getWaterSettings(next);
+    ribbonSpeed = next.ribbonSpeed;
+    for (const ribbon of ribbons) {
+      const inputs = ribbon.material.uniforms;
+      inputs.uLength.value = RIBBON.length + next.ribbonLength * RIBBON.lengthRange;
+      inputs.uDirection.value.set(next.ribbonDirX, next.ribbonDirY);
+      inputs.uWarmth.value = next.palette;
+    }
     const uniforms = water.material.uniforms;
     uniforms.uAmplitude.value = wave.amplitude;
     uniforms.uFrequency.value = wave.frequency;
@@ -182,7 +226,14 @@ export function createScene(
   const clock = new THREE.Clock();
   let phase = 0;
   renderer.setAnimationLoop(() => {
-    phase = advancePhase(phase, clock.getDelta(), wave.speed);
+    const dt = clock.getDelta();
+    phase = advancePhase(phase, dt, wave.speed);
+    // Integrate current speed independently: changes never reset ribbon phase.
+    const flowSpeed = (RIBBON.speedBase + ribbonSpeed * RIBBON.speedRange) * RIBBON.motionSpeed;
+    for (const ribbon of ribbons) {
+      const input = ribbon.material.uniforms.uPhase;
+      input.value = advancePhase(input.value, dt, flowSpeed);
+    }
     water.material.uniforms.uPhase.value = phase;
     renderer.render(scene, camera);
   });
@@ -193,7 +244,7 @@ export function createScene(
     dispose() {
       renderer.setAnimationLoop(null);
       window.removeEventListener("resize", resize);
-      for (const mesh of [water, ...sheets]) {
+      for (const mesh of [water, ...sheets, ...ribbons]) {
         mesh.geometry.dispose();
         mesh.material.dispose();
       }

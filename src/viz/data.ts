@@ -14,6 +14,10 @@ export async function loadParams(): Promise<SceneParams> {
       dirX: p.mesh_direction.x,
       dirY: p.mesh_direction.y,
       palette: p.color_palette,
+      ribbonSpeed: p.ribbon_speed,
+      ribbonLength: p.ribbon_length,
+      ribbonDirX: p.ribbon_direction.x,
+      ribbonDirY: p.ribbon_direction.y,
     };
   } catch {
     return RESTING;
