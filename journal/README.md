@@ -11,5 +11,6 @@
 | [0007](0007-mic-audio-in-browser.md)          | Audio input from the microphone, in the browser | accepted | 2026-10-05 |
 | [0008](0008-client-stack-three-shader-first.md) | Client stack: three.js, shader-first | accepted | 2026-10-05 |
 | [0009](0009-water-background-and-floating-meshes.md) | Continuous water background with floating mesh sheets | accepted | 2026-10-05 |
+| [0010](0010-raw-current-weather-fetch.md) | Raw current-weather fetch; defer visual integration | accepted | 2026-10-06 |
 
 ADR-0009 updated 2026-10-06: approved bottom-sixth water framing and three overlapping sheets with lower shared opacity, preserving current palettes.

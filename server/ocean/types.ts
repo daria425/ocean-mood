@@ -2,7 +2,8 @@ import type { OPEN_METEO } from "../constants.js";
 import type { ParamName } from "../mapping.js";
 
 export type OceanVariable = (typeof OPEN_METEO.current_variables)[number];
-
+export type WeatherDetailVariable =
+  (typeof OPEN_METEO.weather_detail_variables)[number];
 // Shape of Open-Meteo's marine response for our `current=` request.
 // Any value can be null (e.g. on land or near coasts).
 // Example:
@@ -41,6 +42,8 @@ export type MarineCurrentResponse = {
   >;
 };
 
+// Raw current weather: values retain upstream units and nulls.
+// is_day is a numeric flag (1 daylight, 0 night), not a boolean.
 export type WeatherDetailResponse = {
   latitude: number;
   longitude: number;
@@ -50,13 +53,13 @@ export type WeatherDetailResponse = {
   timezone_abbreviation: string;
   elevation: number;
   current_units: { time: string; interval: string } & Record<
-    OceanVariable,
+    WeatherDetailVariable,
     string
   >;
   current: { time: string; interval: number } & Record<
-    OceanVariable,
+    Exclude<WeatherDetailVariable, "is_day">,
     number | null
-  >;
+  > & { is_day: 0 | 1 | null };
 };
 
 // How one raw variable is turned into a client-ready value.

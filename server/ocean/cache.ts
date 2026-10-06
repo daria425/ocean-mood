@@ -28,7 +28,7 @@ function toCell({ lat, lon }: Coords): { key: string; cell: Coords } {
 function mergeLastGood(previous: MarineCurrentResponse | undefined, fresh: MarineCurrentResponse): MarineCurrentResponse {
   if (!previous) return fresh;
   const current = { ...fresh.current };
-  for (const variable of OPEN_METEO.variables) {
+  for (const variable of OPEN_METEO.current_variables) {
     current[variable] = fresh.current[variable] ?? previous.current[variable];
   }
   return { ...fresh, current };

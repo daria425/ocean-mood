@@ -8,7 +8,8 @@ export const SERVER = {
 export const OUTPUT_DECIMALS = 3;
 
 export const OPEN_METEO = {
-  url: "https://marine-api.open-meteo.com/v1/marine",
+  current_url: "https://marine-api.open-meteo.com/v1/marine",
+  weather_detail_url: "https://api.open-meteo.com/v1/forecast",
   timeoutMs: 8000,
   current_variables: [
     "wave_height",

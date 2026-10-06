@@ -46,6 +46,8 @@ Purpose: cache upstream calls, own the mapping, and give the client one stable A
 
 ## Data source
 
+Weather exploration (ADR-0010): `fetchWeatherDetail(coords)` in `server/ocean/openMeteo.ts` fetches raw current atmospheric weather from Open-Meteo's weather endpoint. Fields: `temperature_2m`, `precipitation`, `is_day`, `wind_speed_10m`, `cloud_cover`, `snowfall`. It has a separate response type and shares HTTP timeout/error handling with the marine fetch. No route or production caller, weather cache, normalization, mapping or rendering exists yet; those await an artistic decision. Marine lists use `OPEN_METEO.current_variables`; weather uses `OPEN_METEO.weather_detail_variables`.
+
 Open-Meteo Marine API: https://open-meteo.com/en/docs/marine-weather-api
 
 The original snippet used the Python SDK (`current.Variables(0).Value()`). The BFF calls the REST/JSON endpoint with `current=` and the same 7 variables (`wave_peak_period` was dropped: Open-Meteo returns null for it in `current`) (the browser never calls Open-Meteo itself):

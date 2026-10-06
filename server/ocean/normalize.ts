@@ -32,7 +32,7 @@ function toParamValue(variable: OceanVariable, raw: number): ParamValue {
 // Null-safe, then scaled, then fanned out to every param the map lists.
 function buildParams(current: MarineCurrentResponse['current']): OceanResponse['params'] {
   const params = {} as OceanResponse['params'];
-  for (const variable of OPEN_METEO.variables) {
+  for (const variable of OPEN_METEO.current_variables) {
     const value = toParamValue(variable, current[variable] ?? RESTING_SEA[variable]);
     for (const name of VARIABLES_TO_PARAMS_MAP[variable]) {
       params[name as ParamName] = value;
