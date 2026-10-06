@@ -10,7 +10,13 @@ The current demo draws a single wireframe wave plane. The primary reference comb
 
 ## Decision
 
-Use a continuous 3D water surface as the background/foundation, with floating wireframe mesh sheets above it. Both consume the existing mesh wave parameters; reuse or closely share the wave-setting calculations rather than introduce a separate marine-data mapping. The material, framing, relative motion, and exact implementation remain to be agreed before building.
+Use a continuous 3D water surface as the background/foundation, with floating wireframe mesh sheets above it. Both consume the existing mesh wave parameters; reuse or closely share the wave-setting calculations rather than introduce a separate marine-data mapping.
+
+### Approved refinement — 2026-10-06
+
+Daria approved water occupying approximately the bottom one-sixth of landscape and portrait viewports, with three overlapping sheets above it and lower shared line opacity. Preserve the existing user-tuned water and sheet palettes. This extends the original mixed composition; no separate ADR is needed for tuning opacity or sheet offsets.
+
+The preview uses camera pitch derived from vertical field of view to place the horizon, with a low camera height. The target is approximate: the finite surface and moving crests affect the visible boundary. All three sheets share the water's wave function and phase. `FRAMING`, `WATER`, and `SHEET` in `src/demo/waterSettings.ts` expose controls; `SHEET.layers` contains position offsets and scale, and the shared opacity starts at `0.22`.
 
 ## Alternatives Considered
 
@@ -45,4 +51,4 @@ Use a continuous 3D water surface as the background/foundation, with floating wi
 ## Reference and Pending Design
 
 - [Creating a Stylized 3D Water Shader](https://gameidea.org/2026/02/01/creating-a-stylized-3d-water-shader/) is a technical reference supplied by Daria, not an approved implementation or final look.
-- This decision does not approve changes to palettes, mapping, lighting, transparency, or the existing demo.
+- Further palette, mapping, lighting, and material changes require user approval. The shared opacity reduction above is approved; final glowing wire materials remain pending.

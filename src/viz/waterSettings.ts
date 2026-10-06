@@ -16,6 +16,12 @@
 // ────────────────────  ────────────────────────────────────────────
 //  iridescence           Strength of rainbow colour shifts
 
+// COMPOSITION — fraction is measured from the bottom of any viewport.
+export const FRAMING = {
+  waterScreenFraction: 1 / 6, // Try 0.1–0.35: higher = more water on screen.
+  cameraHeight: 1.2, // Height above water; try 0.8–2.5.
+};
+
 // wireframe: true exposes the underlying geometry.
 export const WATER = {
   // Shape / motion
@@ -42,19 +48,26 @@ export const WATER = {
   segments: 240,
 };
 
-// FLOATING SHEET — same scene, separate transparent wire material.
+// FLOATING SHEETS — shared settings apply to all three.
 export const SHEET = {
   visible: true, // false lets you compare with water alone.
   width: 16, // Try 5–16.
   depth: 5, // Try 3–10.
   altitude: 4, // Try 1–4; too low may intersect the water.
   offsetX: 0, // Move left/right.
-  offsetY: 0, // Higher = farther from the camera.
+  offsetY: -5, // Higher = farther from the camera.
   waveHeight: 1, // Relative to water swells; try 0.3–1.5.
   brightness: 0.65, // Try 0.2–1.5.
-  opacity: 0.55, // Try 0–1.
+  opacity: 0.22, // Try 0.1–0.4: lower keeps overlapping lines softer.
   coldColor: "#1ae6ff",
   warmColor: "#ff8c66",
   segmentsX: 48,
   segmentsY: 24,
+  // Offsets ADD to the shared position above. Scale multiplies width/depth.
+  // Higher y = farther away; higher z = higher above the water.
+  layers: [
+    { x: -3, y: 2, z: -3, scale: 1 },
+    { x: 4, y: 7, z: -2, scale: 1 },
+    { x: -0.5, y: 12, z: -2.5, scale: 1.2 },
+  ],
 };

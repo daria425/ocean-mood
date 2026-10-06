@@ -4,12 +4,13 @@ import { SCENE } from "./constants";
 import {
   advancePhase,
   getWaterSettings,
+  getFramedCameraTarget,
   type DemoParams,
 } from "./calculations";
 import { waterVertexShader, waterFragmentShader, sheetVertexShader, sheetFragmentShader } from "./shaders";
-import { WATER, SHEET } from "./waterSettings";
+import { WATER, SHEET, FRAMING } from "./waterSettings";
 
-function createFloatingSheet(waterMaterial: THREE.ShaderMaterial) {
+function createFloatingSheet(waterMaterial: THREE.ShaderMaterial, layer: typeof SHEET.layers[number]) {
   const material = new THREE.ShaderMaterial({
     vertexShader: sheetVertexShader,
     fragmentShader: sheetFragmentShader,
@@ -34,10 +35,10 @@ function createFloatingSheet(waterMaterial: THREE.ShaderMaterial) {
     },
   });
   const sheet = new THREE.Mesh(
-    new THREE.PlaneGeometry(SHEET.width, SHEET.depth, SHEET.segmentsX, SHEET.segmentsY),
+    new THREE.PlaneGeometry(SHEET.width * layer.scale, SHEET.depth * layer.scale, SHEET.segmentsX, SHEET.segmentsY),
     material,
   );
-  sheet.position.set(SHEET.offsetX, SHEET.offsetY, SHEET.altitude);
+  sheet.position.set(SHEET.offsetX + layer.x, SHEET.offsetY + layer.y, SHEET.altitude + layer.z);
   sheet.visible = SHEET.visible;
   return sheet;
 }
@@ -60,7 +61,9 @@ export function createScene(parent: HTMLElement, params: DemoParams) {
     SCENE.camera.far,
   );
   camera.position.set(...SCENE.camera.position);
-  camera.lookAt(...SCENE.camera.target);
+  camera.position.z = FRAMING.cameraHeight;
+  camera.up.set(0, 0, 1); // This scene uses z as altitude.
+  camera.lookAt(...getFramedCameraTarget());
 
   const material = new THREE.ShaderMaterial({
     vertexShader: waterVertexShader,
@@ -97,7 +100,9 @@ export function createScene(parent: HTMLElement, params: DemoParams) {
     ),
   );
 
-  scene.add(createFloatingSheet(material));
+  for (const layer of SHEET.layers) {
+    scene.add(createFloatingSheet(material, layer));
+  }
 
   const resize = () => {
     renderer.setSize(window.innerWidth, window.innerHeight);

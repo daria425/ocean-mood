@@ -15,12 +15,11 @@ The user stays in the loop. No autonomous "software factory" mode.
 
 1. For any non-trivial task, propose a short plan first and wait for approval.
 2. Implement **one small slice at a time**.
-3. After each slice, run the dev server and show the result (screenshot or description) and **stop**. Wait for the user's OK before the next slice.
+3. After each slice, run the dev server and show the result (screenshot or description) and **stop**. Put screenshots into gitigored screenshots/ dir. Wait for the user's OK before the next slice.
 4. Do not commit, install dependencies, or change the mapping or look without asking.
 5. Visual decisions belong to the user. Offer options, don't silently pick.
 
 Use architecture-doc skill when logging a decision and check this file for any changes needed to keep it up to date with project state
-
 In a fresh session, check for contents of the journal/ dir first (ADRs, indexed in journal/README.md) to see latest state and decisions made
 
 General code style:
@@ -105,15 +104,19 @@ All four elements from the inspo are in scope:
 
 ## UI / interaction (v1)
 
-- Fullscreen canvas, otherwise minimal chrome.
-- One small, unobtrusive label: **lat, lon + time**. It is unstyled for now and will be styled later, so keep the markup simple and easy to restyle.
-- **Pan through the scene** with the mouse (touch drag on mobile). This is a camera pan/parallax through the scene, not a free orbit/zoom.
+- Implemented: fullscreen canvas, glassy water near the bottom one-sixth, and three overlapping wireframe sheets. Vertical-FOV framing keeps the target fraction consistent in landscape and portrait; moving crests vary the boundary slightly.
+- Planned, not implemented: one small label with **lat, lon + time**. Keep the eventual markup simple and easy to restyle.
+- Planned, not implemented: **pan through the scene** with the mouse (touch drag on mobile). This is camera pan/parallax, not free orbit/zoom.
 - No charts, numbers, units or dashboards.
 
-Current status:
-Small basic demo of API response processed into mesh added
-The demo now previews glassy 3D water with one floating wireframe sheet, sharing wave calculations and animation phase. Appearance controls and suggested ranges live in `src/demo/waterSettings.ts` (`WATER` and `SHEET`); all GLSL lives in `src/demo/shaders.ts`. Reflections are procedural light bands, not reflections of scene objects; transmission/refraction is not built yet. The sheet uses basic wireframe rendering; refined glowing lines remain future work.
-What's still missing is everything else:
+Current status (2026-10-06):
+The demo previews glassy water and three sheets sharing wave calculations and animation phase. `src/demo/waterSettings.ts` contains `FRAMING` (water fraction `1 / 6`, camera height `1.2`), `WATER` (material and motion), and `SHEET` (shared opacity `0.22`, colours, shape, plus three `layers` position/scale entries). Layer offsets add to the shared sheet position. Preserve user-tuned palettes; do not silently replace them.
+
+All GLSL stays together in `src/demo/shaders.ts`; Three.js objects live in `scene.ts`; camera/wave calculations live in `calculations.ts`; fetching lives in `data.ts`. Reflections are procedural light bands, not reflections of scene objects; transmission/refraction is not built yet. Sheets use basic wireframe rendering; refined glowing lines remain future work. Data is fetched once at startup with a resting fallback; polling and easing are not implemented.
+
+Handoff: composition approved in ADR-0009 (updated 2026-10-06). Desktop (1280×800) and portrait (390×844) rendering and animation were checked; build and client TypeScript passed. Wait for the user's visual feedback before another slice. No additional ADR is needed for the current opacity or position tuning.
+
+Still missing:
 
 3D Scene:
 
@@ -146,4 +149,5 @@ Overall Experience (v2):
 
 - `npm run dev:server`: Hono server on http://localhost:8787 (tsx watch)
 - `npm test`: vitest (`test/`); `npm run test:watch` to watch
-- Client commands (`dev`, `build`, `preview`) to be added when Vite is scaffolded.
+- `npm run dev`: Vite client (default http://localhost:5173).
+- `npm run build`: production client build; `npm run preview`: serve that build.
