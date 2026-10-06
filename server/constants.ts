@@ -10,7 +10,7 @@ export const OUTPUT_DECIMALS = 3;
 export const OPEN_METEO = {
   url: "https://marine-api.open-meteo.com/v1/marine",
   timeoutMs: 8000,
-  variables: [
+  current_variables: [
     "wave_height",
     "wave_direction",
     "wave_period",
@@ -18,6 +18,14 @@ export const OPEN_METEO = {
     "sea_surface_temperature",
     "ocean_current_velocity",
     "ocean_current_direction",
+  ],
+  weather_detail_variables: [
+    "temperature_2m",
+    "precipitation",
+    "is_day",
+    "wind_speed_10m",
+    "cloud_cover",
+    "snowfall",
   ],
 } as const;
 

@@ -15,6 +15,25 @@ import {
 } from "./shaders";
 import { WATER, SHEET, FRAMING } from "./waterSettings";
 
+// Each triangle needs its own three corners for barycentric edge distances.
+// Width/depth and segment counts set the lattice; live wave params deform it
+// later in the vertex shader, so changing inputs never rebuilds this geometry.
+function createSheetGeometry(layer: (typeof SHEET.layers)[number]) {
+  const plane = new THREE.PlaneGeometry(
+    SHEET.width * layer.scale, SHEET.depth * layer.scale,
+    SHEET.segmentsX, SHEET.segmentsY,
+  );
+  const geometry = plane.toNonIndexed();
+  plane.dispose();
+  const count = geometry.getAttribute("position").count;
+  const corners = new Float32Array(count * 3);
+  for (let vertex = 0; vertex < count; vertex++) {
+    corners[vertex * 3 + vertex % 3] = 1;
+  }
+  geometry.setAttribute("aBarycentric", new THREE.BufferAttribute(corners, 3));
+  return geometry;
+}
+
 // Params drive the same swell and palette as the water. Layer offsets/scale
 // control placement; SHEET.waveHeight controls this sheet's relative swell.
 function createFloatingSheet(
@@ -25,7 +44,7 @@ function createFloatingSheet(
   const material = new THREE.ShaderMaterial({
     vertexShader: sheetVertexShader,
     fragmentShader: sheetFragmentShader,
-    wireframe: true,
+    wireframe: false,
     transparent: true,
     depthWrite: false,
     depthTest: true,
@@ -45,15 +64,15 @@ function createFloatingSheet(
       uWarmColor: { value: new THREE.Color(SHEET.warmColor) },
       uBrightness: { value: SHEET.brightness },
       uOpacity: { value: SHEET.opacity },
+      uLineWidth: { value: SHEET.lineWidth },
+      uLineSoftness: { value: SHEET.lineSoftness },
+      uGlowWidth: { value: SHEET.glowWidth },
+      uGlowStrength: { value: SHEET.glowStrength },
+      uCrestBrightness: { value: SHEET.crestBrightness },
     },
   });
   const sheet = new THREE.Mesh(
-    new THREE.PlaneGeometry(
-      SHEET.width * layer.scale,
-      SHEET.depth * layer.scale,
-      SHEET.segmentsX,
-      SHEET.segmentsY,
-    ),
+    createSheetGeometry(layer),
     material,
   );
   sheet.position.set(

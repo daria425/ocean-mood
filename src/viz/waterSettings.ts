@@ -59,6 +59,11 @@ export const SHEET = {
   waveHeight: 1, // Relative to water swells; try 0.3–1.5.
   brightness: 0.65, // Try 0.2–1.5.
   opacity: 0.22, // Try 0.1–0.4: lower keeps overlapping lines softer.
+  lineWidth: 1.0, // Full core width in drawing-buffer pixels; try 0.4–1.2.
+  lineSoftness: 1.0, // Antialiased edge transition in pixels; higher = softer.
+  glowWidth: 2.2, // Halo reach in pixels; try 1–4 (local shader glow, not bloom).
+  glowStrength: 0.2, // Halo opacity relative to the core; 0 removes the halo.
+  crestBrightness: 0.55, // Extra light on high swells; 0 gives uniform threads.
   coldColor: "#1ae6ff",
   warmColor: "#ff8c66",
   segmentsX: 48,

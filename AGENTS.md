@@ -112,7 +112,7 @@ All four elements from the inspo are in scope:
 Current status (2026-10-06):
 The demo previews glassy water and three sheets sharing wave calculations and animation phase. `src/viz/waterSettings.ts` contains `FRAMING` (water fraction `1 / 6`, camera height `1.2`), `WATER` (material and motion), and `SHEET` (shared opacity `0.22`, colours, shape, plus three `layers` position/scale entries). Layer offsets add to the shared sheet position. Preserve user-tuned palettes; do not silently replace them.
 
-All GLSL stays together in `src/viz/shaders.ts`; Three.js objects live in `scene.ts`; camera/wave calculations live in `calculations.ts`; fetching lives in `data.ts`. Reflections are procedural light bands, not reflections of scene objects; transmission/refraction is not built yet. Sheets use basic wireframe rendering; refined glowing lines remain future work. Data is fetched once at startup with a resting fallback; polling and easing are not implemented. `src/viz/params.ts` defines the current layer inputs and scene controller. `createScene(parent, initialParams?)` fills missing starting values from `RESTING` and returns `updateParams(completeParams)` plus `dispose()`. Updates change uniforms without rebuilding geometry or resetting wave phase; inputs must already be smoothed upstream. Audio inputs are not implemented yet.
+All GLSL stays together in `src/viz/shaders.ts`; Three.js objects live in `scene.ts`; camera/wave calculations live in `calculations.ts`; fetching lives in `data.ts`. Reflections are procedural light bands, not reflections of scene objects; transmission/refraction is not built yet. Sheets now use barycentric shader lines with adjustable width, softness, a local halo and crest brightness in `SHEET`; this refinement is awaiting visual approval. Full-scene bloom remains future work. Data is fetched once at startup with a resting fallback; polling and easing are not implemented. `src/viz/params.ts` defines the current layer inputs and scene controller. `createScene(parent, initialParams?)` fills missing starting values from `RESTING` and returns `updateParams(completeParams)` plus `dispose()`. Updates change uniforms without rebuilding geometry or resetting wave phase; inputs must already be smoothed upstream. Audio inputs are not implemented yet.
 
 Handoff: composition approved in ADR-0009 (updated 2026-10-06). Desktop (1280×800) and portrait (390×844) rendering and animation were checked; build and client TypeScript passed. Wait for the user's visual feedback before another slice. No additional ADR is needed for the current opacity or position tuning.
 
@@ -120,7 +120,7 @@ Still missing:
 
 3D Scene:
 
-- Wave mesh: a proper version with barycentric glowing lines, layered swells and the glow along the ridges.
+- Wave mesh: review the barycentric thread/halo and crest-light preview; existing layered swells and composition are preserved.
 - Ribbons: the iridescent flow ribbons.
 - Orbs: the glass orbs and wire spheres.
 - Particles: the sparkle particles.

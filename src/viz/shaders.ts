@@ -63,11 +63,19 @@ const waveFunctions = /* glsl */ `
 // Same wave function and phase as the water; its separate mesh sits above it.
 export const sheetVertexShader = /* glsl */ `
   ${waveFunctions}
+  attribute vec3 aBarycentric;
+  varying vec3 vBarycentric;
+  varying float vCrest;
   varying vec2 vUv;
   void main() {
     vUv = uv;
+    vBarycentric = aBarycentric;
     vec3 world = (modelMatrix * vec4(position, 1.0)).xyz;
-    world.z += surface(world.xy).x;
+    float height = surface(world.xy).x;
+    // Normalize by the sum of swell amplitudes: brightness follows the crest
+    // without changing when the upstream amplitude makes the whole sheet taller.
+    vCrest = height / max(uAmplitude * (1.28 + uCrossSwell), 0.0001);
+    world.z += height;
     gl_Position = projectionMatrix * viewMatrix * vec4(world, 1.0);
   }
 `;
@@ -78,13 +86,37 @@ export const sheetFragmentShader = /* glsl */ `
   uniform vec3 uWarmColor;
   uniform float uBrightness;
   uniform float uOpacity;
+  uniform float uLineWidth;       // Core thickness in drawing-buffer pixels.
+  uniform float uLineSoftness;    // Smooth transition at each core edge.
+  uniform float uGlowWidth;       // Soft halo radius, confined to the sheet.
+  uniform float uGlowStrength;    // Halo intensity relative to the thread.
+  uniform float uCrestBrightness; // Extra luminance on the high parts of a swell.
+  varying vec3 vBarycentric;
+  varying float vCrest;
   varying vec2 vUv;
   void main() {
     // Fade the perimeter so the sheet has no hard rectangular border.
     vec2 edge = smoothstep(vec2(0.0), vec2(0.15), vUv)
       * smoothstep(vec2(0.0), vec2(0.15), 1.0 - vUv);
-    vec3 color = mix(uColdColor, uWarmColor, uWarmth) * uBrightness;
-    gl_FragColor = vec4(color, uOpacity * edge.x * edge.y);
+    // Barycentric values reach zero at triangle edges. Divide by their
+    // screen-space gradient to measure distance in pixels at any perspective.
+    vec3 gradient = max(sqrt(dFdx(vBarycentric) * dFdx(vBarycentric)
+      + dFdy(vBarycentric) * dFdy(vBarycentric)), vec3(0.00001));
+    vec3 distances = vBarycentric / gradient;
+    float distanceToEdge = min(distances.x, min(distances.y, distances.z));
+    float halfWidth = uLineWidth * 0.5;
+    float core = 1.0 - smoothstep(max(0.0, halfWidth - uLineSoftness * 0.5),
+      halfWidth + uLineSoftness * 0.5, distanceToEdge);
+    float halo = exp(-pow(distanceToEdge / max(uGlowWidth, 0.001), 2.0));
+    // Keep dense distant triangles from turning into a glowing solid fill.
+    float separation = smoothstep(0.0, 2.0, 1.0 / max(max(gradient.x,
+      gradient.y), gradient.z));
+    float light = core + halo * uGlowStrength * separation;
+    float crest = smoothstep(0.0, 0.85, vCrest);
+    vec3 color = mix(uColdColor, uWarmColor, uWarmth) * uBrightness
+      * (1.0 + crest * uCrestBrightness);
+    gl_FragColor = vec4(color, uOpacity * edge.x * edge.y * light);
+
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
   }
