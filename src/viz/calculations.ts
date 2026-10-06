@@ -1,7 +1,6 @@
-import { WAVE, SCENE, type RESTING } from './constants';
+import { WAVE, SCENE } from './constants';
+import type { SceneParams } from './params';
 import { WATER, FRAMING } from './waterSettings';
-
-export type DemoParams = typeof RESTING;
 
 // Aim above the horizon so it falls near the bottom of the viewport.
 // Vertical FOV is independent of aspect ratio, so portrait keeps the same framing.
@@ -14,7 +13,7 @@ export function getFramedCameraTarget(): [number, number, number] {
 }
 
 // Convert normalized demo inputs into the existing drawing ranges.
-export function getWaveSettings(params: DemoParams) {
+export function getWaveSettings(params: SceneParams) {
   return {
     amplitude: WAVE.amplitudeBase + params.amplitude * WAVE.amplitudeScale,
     frequency: WAVE.frequencyBase + (1 - params.wavelength) * WAVE.frequencyScale,
@@ -27,7 +26,8 @@ export function advancePhase(phase: number, deltaSeconds: number, speed: number)
   return phase + deltaSeconds * speed;
 }
 
-export function getWaterSettings(params: DemoParams) {
+// Artistic multipliers scale swell height, spacing and travel speed independently.
+export function getWaterSettings(params: SceneParams) {
   const wave = getWaveSettings(params);
   return {
     amplitude: wave.amplitude * WATER.swellHeight,

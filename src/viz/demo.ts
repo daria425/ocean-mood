@@ -4,5 +4,5 @@ import { createScene } from './scene';
 
 export async function startDemo(parent: HTMLElement) {
   const params = await loadParams();
-  createScene(parent, params);
+  return createScene(parent, params);
 }

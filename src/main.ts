@@ -1,5 +1,4 @@
-// Entry point. Right now it only mounts the throwaway demo; delete src/demo/
-// and replace this line when the real scene exists.
+// Entry point: mount the current ocean scene demo.
 import { startDemo } from "./viz/demo";
 
 startDemo(document.body);

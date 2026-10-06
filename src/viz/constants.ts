@@ -1,7 +1,8 @@
 // Existing demo settings, grouped here without changing their values.
+import type { SceneParams } from './params';
 export const DEMO_LOCATION = { lat: 35, lon: -40 };
 
-export const RESTING = {
+export const RESTING: SceneParams = {
   amplitude: 0.2, wavelength: 0.5, speed: 0.4,
   dirX: 0.8, dirY: 0.6, palette: 0.3,
 };

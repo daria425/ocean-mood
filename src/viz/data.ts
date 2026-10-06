@@ -1,7 +1,8 @@
 // Calm fallback so the sea shows even if the server is not running.
 import { DEMO_LOCATION, RESTING } from './constants';
+import type { SceneParams } from './params';
 
-export async function loadParams(): Promise<typeof RESTING> {
+export async function loadParams(): Promise<SceneParams> {
   try {
     const res = await fetch(`/api/ocean?lat=${DEMO_LOCATION.lat}&lon=${DEMO_LOCATION.lon}`);
     if (!res.ok) return RESTING;
@@ -18,4 +19,3 @@ export async function loadParams(): Promise<typeof RESTING> {
     return RESTING;
   }
 }
-
