@@ -7,10 +7,18 @@ import {
   getFramedCameraTarget,
   type DemoParams,
 } from "./calculations";
-import { waterVertexShader, waterFragmentShader, sheetVertexShader, sheetFragmentShader } from "./shaders";
+import {
+  waterVertexShader,
+  waterFragmentShader,
+  sheetVertexShader,
+  sheetFragmentShader,
+} from "./shaders";
 import { WATER, SHEET, FRAMING } from "./waterSettings";
 
-function createFloatingSheet(waterMaterial: THREE.ShaderMaterial, layer: typeof SHEET.layers[number]) {
+function createFloatingSheet(
+  waterMaterial: THREE.ShaderMaterial,
+  layer: (typeof SHEET.layers)[number],
+) {
   const material = new THREE.ShaderMaterial({
     vertexShader: sheetVertexShader,
     fragmentShader: sheetFragmentShader,
@@ -27,7 +35,9 @@ function createFloatingSheet(waterMaterial: THREE.ShaderMaterial, layer: typeof 
       uDirection: waterMaterial.uniforms.uDirection,
       uCrossSwell: waterMaterial.uniforms.uCrossSwell,
       uWarmth: waterMaterial.uniforms.uWarmth,
-      uAmplitude: { value: waterMaterial.uniforms.uAmplitude.value * SHEET.waveHeight },
+      uAmplitude: {
+        value: waterMaterial.uniforms.uAmplitude.value * SHEET.waveHeight,
+      },
       uColdColor: { value: new THREE.Color(SHEET.coldColor) },
       uWarmColor: { value: new THREE.Color(SHEET.warmColor) },
       uBrightness: { value: SHEET.brightness },
@@ -35,12 +45,59 @@ function createFloatingSheet(waterMaterial: THREE.ShaderMaterial, layer: typeof 
     },
   });
   const sheet = new THREE.Mesh(
-    new THREE.PlaneGeometry(SHEET.width * layer.scale, SHEET.depth * layer.scale, SHEET.segmentsX, SHEET.segmentsY),
+    new THREE.PlaneGeometry(
+      SHEET.width * layer.scale,
+      SHEET.depth * layer.scale,
+      SHEET.segmentsX,
+      SHEET.segmentsY,
+    ),
     material,
   );
-  sheet.position.set(SHEET.offsetX + layer.x, SHEET.offsetY + layer.y, SHEET.altitude + layer.z);
+  sheet.position.set(
+    SHEET.offsetX + layer.x,
+    SHEET.offsetY + layer.y,
+    SHEET.altitude + layer.z,
+  );
   sheet.visible = SHEET.visible;
   return sheet;
+}
+
+function createWaterLayer(
+  wave: ReturnType<typeof getWaterSettings>,
+  params: DemoParams,
+) {
+  const material = new THREE.ShaderMaterial({
+    vertexShader: waterVertexShader,
+    fragmentShader: waterFragmentShader,
+    wireframe: WATER.wireframe,
+    uniforms: {
+      uPhase: { value: 0 },
+      uAmplitude: { value: wave.amplitude },
+      uFrequency: { value: wave.frequency },
+      uDirection: { value: new THREE.Vector2(params.dirX, params.dirY) },
+      uWarmth: { value: params.palette },
+      uCrossSwell: { value: WATER.crossSwell },
+      uRippleStrength: { value: WATER.rippleStrength },
+      uRippleScale: { value: WATER.rippleScale },
+      uReflectionStrength: { value: WATER.reflectionStrength },
+      uReflectionSoftness: { value: WATER.reflectionSoftness },
+      uIridescence: { value: WATER.iridescence },
+      uSurfaceBrightness: { value: WATER.surfaceBrightness },
+      uDistanceFade: { value: WATER.distanceFade },
+      uColdColor: { value: new THREE.Color(WATER.coldColor) },
+      uWarmColor: { value: new THREE.Color(WATER.warmColor) },
+      uBackgroundColor: { value: new THREE.Color(WATER.backgroundColor) },
+    },
+  });
+  return new THREE.Mesh(
+    new THREE.PlaneGeometry(
+      WATER.size,
+      WATER.size,
+      WATER.segments,
+      WATER.segments,
+    ),
+    material,
+  );
 }
 
 export function createScene(parent: HTMLElement, params: DemoParams) {
@@ -65,43 +122,11 @@ export function createScene(parent: HTMLElement, params: DemoParams) {
   camera.up.set(0, 0, 1); // This scene uses z as altitude.
   camera.lookAt(...getFramedCameraTarget());
 
-  const material = new THREE.ShaderMaterial({
-    vertexShader: waterVertexShader,
-    fragmentShader: waterFragmentShader,
-    wireframe: WATER.wireframe,
-    uniforms: {
-      uPhase: { value: 0 },
-      uAmplitude: { value: wave.amplitude },
-      uFrequency: { value: wave.frequency },
-      uDirection: { value: new THREE.Vector2(params.dirX, params.dirY) },
-      uWarmth: { value: params.palette },
-      uCrossSwell: { value: WATER.crossSwell },
-      uRippleStrength: { value: WATER.rippleStrength },
-      uRippleScale: { value: WATER.rippleScale },
-      uReflectionStrength: { value: WATER.reflectionStrength },
-      uReflectionSoftness: { value: WATER.reflectionSoftness },
-      uIridescence: { value: WATER.iridescence },
-      uSurfaceBrightness: { value: WATER.surfaceBrightness },
-      uDistanceFade: { value: WATER.distanceFade },
-      uColdColor: { value: new THREE.Color(WATER.coldColor) },
-      uWarmColor: { value: new THREE.Color(WATER.warmColor) },
-      uBackgroundColor: { value: new THREE.Color(WATER.backgroundColor) },
-    },
-  });
-  scene.add(
-    new THREE.Mesh(
-      new THREE.PlaneGeometry(
-        WATER.size,
-        WATER.size,
-        WATER.segments,
-        WATER.segments,
-      ),
-      material,
-    ),
-  );
+  const water = createWaterLayer(wave, params);
+  scene.add(water);
 
   for (const layer of SHEET.layers) {
-    scene.add(createFloatingSheet(material, layer));
+    scene.add(createFloatingSheet(water.material, layer));
   }
 
   const resize = () => {
@@ -116,7 +141,7 @@ export function createScene(parent: HTMLElement, params: DemoParams) {
   let phase = 0;
   renderer.setAnimationLoop(() => {
     phase = advancePhase(phase, clock.getDelta(), wave.speed);
-    material.uniforms.uPhase.value = phase;
+    water.material.uniforms.uPhase.value = phase;
     renderer.render(scene, camera);
   });
 }
